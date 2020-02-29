@@ -23,7 +23,7 @@ def storage_contract(outcome_leger, accounts):
     # deploy the contract with the initial value as a constructor argument
     # assert accounts[0].balance() == ORIGNAIL_AMOUNT, "ORIGNAIL_AMOUNT error"
     # assert accounts[2].balance() == ORIGNAIL_AMOUNT
-    yield outcome_leger.deploy(accounts[CAFE], STARTING_ODDS, {'from': accounts[HOUSE], 'value': OWNER_STAKE})
+    yield outcome_leger.deploy(accounts[HOUSE], STARTING_ODDS, {'from': accounts[CAFE]})
 
 
 
@@ -31,6 +31,7 @@ def storage_contract(outcome_leger, accounts):
 
 def test_bet_payout(storage_contract, accounts):
      # place a single valid bet
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     cafe_balance  = accounts[CAFE].balance()
     leger_owner_balance  = accounts[HOUSE].balance() 
     punter_balance =  accounts[PUNTER].balance()

@@ -22,11 +22,12 @@ def storage_contract(outcome_leger, accounts):
     # deploy the contract with the initial value as a constructor argument
     # assert accounts[CAFE].balance() == ORIGNAIL_AMOUNT, "ORIGNAIL_AMOUNT error"
     # assert accounts[PUNTER].balance() == ORIGNAIL_AMOUNT
-    yield outcome_leger.deploy(accounts[CAFE], STARTING_ODDS, {'from': accounts[HOUSE], 'value': OWNER_STAKE})
+    yield outcome_leger.deploy(accounts[HOUSE], STARTING_ODDS, {'from': accounts[CAFE]})
 
 
 def test_initial_state(storage_contract, accounts):
     # Check if the constructor of the contract is set up properly
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     assert storage_contract.leger_owner() == accounts[HOUSE]
     assert storage_contract.contract_cafe() == accounts[CAFE]
     assert storage_contract.owner_stake() == OWNER_STAKE
@@ -37,6 +38,7 @@ def test_initial_state(storage_contract, accounts):
 
 def test_good_bet(storage_contract, accounts):
      # place a single valid bet
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     assert storage_contract.get_punter_count() == 0
     storage_contract.bet({'from': accounts[PUNTER], 'value': PUNTER_STAKE_WEI})
     assert storage_contract.get_punter_count()== 1
@@ -50,6 +52,7 @@ def test_good_bet(storage_contract, accounts):
 
 def test_multple_good_bets_same_punter(storage_contract, accounts):
     # place a multiple valid bets from the same punter
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     assert storage_contract.get_punter_count()== 0
     storage_contract.bet({'from': accounts[PUNTER], 'value': PUNTER_STAKE_WEI})
     storage_contract.bet({'from': accounts[PUNTER], 'value': PUNTER_STAKE_WEI})
@@ -65,6 +68,7 @@ def test_multple_good_bets_same_punter(storage_contract, accounts):
 
 def test_multple_good_bets(storage_contract, accounts):
     # place a multiple valid bets from the different punters
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     assert storage_contract.get_punter_count()== 0
     total_at_stake = 0
     for i in range(2,4):
@@ -81,6 +85,7 @@ def test_multple_good_bets(storage_contract, accounts):
 
 def test_high_bet(storage_contract, accounts):
     # place a bet above OWNER_STAKE"
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     assert storage_contract.get_punter_count()== 0
     with reverts('bet cannot be covered'):
         storage_contract.bet({'from': accounts[PUNTER], 'value': ABOVE_OWNER_STAKE})
@@ -89,6 +94,7 @@ def test_high_bet(storage_contract, accounts):
 
 def test_bet_after_close(storage_contract, accounts):
     # place a bet above OWNER_STAKE"
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     storage_contract.close_leger()
     with reverts('the leger has to be open for bets'):
         storage_contract.bet({'from': accounts[PUNTER], 'value': ABOVE_OWNER_STAKE})
@@ -96,6 +102,7 @@ def test_bet_after_close(storage_contract, accounts):
 
 def test_bet_after_close(storage_contract, accounts):
     # place a bet after the leger is closed"
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     storage_contract.close_leger()
     with reverts('the leger has to be open for bets'):
         storage_contract.bet({'from': accounts[PUNTER], 'value': PUNTER_STAKE_WEI})
@@ -103,9 +110,10 @@ def test_bet_after_close(storage_contract, accounts):
 
 def test_bet_after_close(storage_contract, accounts):
     # place a bet after the event has closed"
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     storage_contract.end_event()
     with reverts('event must be not be over'):
-        storage_contract.bet({'from': accounts[HOUSE], 'value': PUNTER_STAKE_WEI})
+        storage_contract.bet({'from': accounts[PUNTER], 'value': PUNTER_STAKE_WEI})
     assert storage_contract.get_punter_count()== 0
 
 
@@ -113,12 +121,14 @@ def test_bet_after_close(storage_contract, accounts):
 
 def test_will_payout_true(storage_contract, accounts):
     # test getting heads i.e payout"
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     storage_contract.on_flip(True)
     assert storage_contract.will_payout()
 
 
 def test_will_payout_false(storage_contract, accounts):
     # test getting heads i.e payout"
+    storage_contract.add_to_pot( {'from': accounts[HOUSE], 'value': OWNER_STAKE})
     storage_contract.on_flip(False)
     assert storage_contract.will_payout() == False
 
