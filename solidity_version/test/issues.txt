@@ -1,0 +1,9 @@
+  1) Contract: Ledger
+       testing get_total_to_pay  after a bet:
+     Error: Returned error: Key not found in database
+     at PromiEvent (/usr/local/lib/node_modules/truffle/build/webpack:/packages/contract/lib/promievent.js:9:1)
+      at TruffleContract.get_total_to_pay (/usr/local/lib/node_modules/truffle/build/webpack:/packages/contract/lib/execute.js:120:1)
+      at Context.it (test/ledger.js:91:41)
+      at process.internalTickCallback (internal/process/next_tick.js:77:7)
+
+Problem: wrong fucntion signature
