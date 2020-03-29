@@ -1,0 +1,2 @@
+eth-brownie==1.6.5
+vyper==0.1.0b16
