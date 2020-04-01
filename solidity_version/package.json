@@ -16,8 +16,13 @@
     "lite-server": "^2.3.0"
   },
   "dependencies": {
+    "@0x/sol-trace": "^3.0.8",
+    "bip39": "^3.0.2",
     "create-react-app": "^3.4.1",
+    "ethereumjs-wallet": "^0.6.3",
     "solc": "^0.6.4",
-    "truffle": "^5.1.18"
+    "truffle": "^5.1.18",
+    "web3-provider-engine": "^15.0.6",
+    "zeppelin-solidity": "^1.12.0"
   }
 }
