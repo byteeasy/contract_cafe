@@ -1,5 +1,5 @@
 const web3 = global.web3;
-const Ledger = artifacts.require("Ledger");
+const HeadsOrTailsLedger = artifacts.require("HeadsOrTailsLedger");
 const GANACHE_GAS_PRICE = 20000000000
 const STARTING_ODDS = 400; // in percent
 const OWNER_STAKE = 1*10e17;
@@ -50,7 +50,7 @@ contract("Ledger", accounts => {
 
     beforeEach(async function() {
        // ledger = await Ledger.deployed();
-       ledger = await Ledger.new(accounts[1], STARTING_ODDS)
+       ledger = await HeadsOrTailsLedger.new(accounts[1], STARTING_ODDS)
       });
 
 
@@ -146,122 +146,5 @@ contract("Ledger", accounts => {
         let total_to_pay = await ledger.get_total_to_pay()
         assert.equal(balance_to_wei(total_to_pay), (BASE_PAYOUT+BASE_FEE) *2)
     });
-
-
-    it("testing account balances after payout of one bet", async () => {
-        await ledger.add_to_pot({value: OWNER_STAKE})
-        await ledger.bet({value: PUNTER_STAKE, from: accounts[2]});
-
-        let force_outcome_reciept = await ledger.force_outcome(true, {from: accounts[1]})
-          
-        let ledger_owner_balance = await get_balance(accounts[0]) 
-        let contract_cafe_balance = await get_balance(accounts[1])
-        let punter_balance = await get_balance(accounts[2])
-
-        let payout_reciept = await ledger.payout()
-
-        let new_ledger_owner_balance = await get_balance(accounts[0])
-        assert.equal(new_ledger_owner_balance, (OWNER_STAKE+ledger_owner_balance 
-                                    - (BASE_PAYOUT+BASE_FEE +  tx_cost(payout_reciept))))
-
-        let new_contract_cafe_balance = await get_balance(accounts[1])
-        assert.equal(new_contract_cafe_balance, contract_cafe_balance + BASE_FEE)
-
-        let new_punter_balance = await get_balance(accounts[2])
-        assert.equal(new_punter_balance, punter_balance + BASE_PAYOUT+PUNTER_STAKE)
-
-        let new_contract_balance = await get_balance(ledger.address)
-        assert.equal(new_contract_balance, 0)
-
-
-    });
-
-    it("testing account balances after a lose", async () => {
-        await ledger.add_to_pot({value: OWNER_STAKE})
-        bet_receipt = await ledger.bet({value: PUNTER_STAKE, from: accounts[2]});
-        
-        // // console.log("ledger.payout: ", receipt.receipt.cumulativeGasUsed/20000000000)
-        let force_outcome_reciept = await ledger.force_outcome(false, {from: accounts[1]})
-       
-       
-        let ledger_owner_balance = await get_balance(accounts[0]) 
-        let contract_cafe_balance = await get_balance(accounts[1])
-        let punter_balance = await get_balance(accounts[2])
-
-        let payout_reciept = await ledger.payout()
-
-        let new_ledger_owner_balance = await get_balance(accounts[0])
-        let excpect_balance = OWNER_STAKE+ledger_owner_balance + PUNTER_STAKE  - (BASE_FEE + tx_cost(payout_reciept))
-        assert.equal(Math.trunc(new_ledger_owner_balance/10000000000), Math.trunc(excpect_balance/10000000000))
-
-        let new_contract_cafe_balance = await get_balance(accounts[1])
-        assert.equal(new_contract_cafe_balance, contract_cafe_balance + BASE_FEE)
-
-        let new_punter_balance = await get_balance(accounts[2])
-        assert.equal(new_punter_balance, punter_balance)
-
-        let new_contract_balance = await get_balance(ledger.address)
-        assert.equal(new_contract_balance, 0)
-
-    });
-
-
-
-
-    it("testing cost 100 bets two punter ", async () => {
-        await ledger.add_to_pot({value: 3*OWNER_STAKE})
-        let N = 10;
-        for (let i=0; i< N; i++) {
-            await ledger.bet({value: PUNTER_STAKE, from: accounts[i%8+2]});
-            let total_to_pay =  await ledger.get_total_to_pay()
-            // console.log("total_to_pay", Number(total_to_pay))
-            ledger_owner_balance = await get_balance(accounts[0])
-            // console.log("ledger_owner_balance", ledger_owner_balance)
-            // console.log("diff ", ledger_owner_balance -  Number(total_to_pay))
-            let cafe_fees =  await ledger.get_cafe_fees()
-            console.log("cafe_fees ", Number(cafe_fees))
-        }
-        await ledger.force_outcome(true, {from: accounts[1]})
-        let payout_reciept = await ledger.payout({from: accounts[0]})
-        console.log("cost: ", tx_cost(payout_reciept)/(1 * 1000000000000000))
-
-    });
-
-
-    it("testing the cost 10 bets placed asynchronously by 7  punter ", async () => {
-        await ledger.add_to_pot({value: 3*OWNER_STAKE})
-        let N = 10;
-        let promisies = [];
-        for (let i=0; i< N; i++) {
-            promisies.push(ledger.bet({value: PUNTER_STAKE, from: accounts[i%8+2]}) );
-        }
-        await Promise.all(promisies)
-        await ledger.force_outcome(true, {from: accounts[1]})
-        let payout_reciept = await ledger.payout({from: accounts[1]})
-        console.log("cost: ", tx_cost(payout_reciept)/(N * 1000000000000000))
-
-    });
-
-
-    // it("testing rejecting bet that cant be covered", async function() {
-    //     let bet_error;
-    //     try {
-    //         await ledger.bet({value: ABOVE_OWNER_STAKE, from: accounts[2]});
-    //     } catch (error) {
-    //         bet_error = error;
-    //     }
-    //     assert.notEqual(bet_error, undefined, 'Error must be thrown');
-    //     let error_msg = await ledger.bet_cannot_be_covered_msg.call()
-    //     assert.isAbove(bet_error.message.search(error_msg), -1, 'wrong error was thrown: ' + bet_error.message);
-    // });
-
-    // it("testing rejecting bet that cant be covered2", async function() {
-    //     let error_msg = await ledger.bet_cannot_be_covered_msg.call()
-    //     test_error(error_msg, async function () {
-    //         await ledger.bet({value: ABOVE_OWNER_STAKE, from: accounts[2]});
-    //     });
-    // });
-   
-
 });
   
